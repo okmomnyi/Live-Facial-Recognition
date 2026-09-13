@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -64,10 +64,14 @@ async def get_person(
     return people[0]
 
 
+# Returns an explicit empty Response (annotated `-> Response`) so FastAPI never
+# builds a response body for the 204. This is correct on current FastAPI and
+# also avoids the "Status code 204 must not have a response body" assertion that
+# older FastAPI versions raise for a `-> None` annotation on a 204 route.
 @router.delete("/{person_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_person(
     person_id: int, session: AsyncSession = Depends(get_session)
-) -> None:
+) -> Response:
     # Fetch ref image paths so we can clean up files after the cascade delete.
     ref_paths = (
         await session.execute(
@@ -98,3 +102,5 @@ async def delete_person(
             disk.unlink(missing_ok=True)
         except (ValueError, OSError):
             continue
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
