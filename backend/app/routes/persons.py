@@ -18,20 +18,28 @@ router = APIRouter(prefix="/api/persons", tags=["persons"])
 
 
 async def _persons_with_counts(session: AsyncSession, person_id: int | None = None):
-    # Correlated subquery: image_path of the person's first (lowest-id) ref.
+    # Two correlated scalar subqueries over refs, one for the count and one for
+    # the first (lowest-id) ref's image_path (the card thumbnail). We correlate
+    # Person explicitly so SQLAlchemy keeps `refs` in each subquery's FROM
+    # instead of auto-correlating it out (which would raise "no FROM clauses").
+    # Avoiding an outer join + GROUP BY also sidesteps that interaction entirely.
+    ref_count = (
+        select(func.count(Ref.id))
+        .where(Ref.person_id == Person.id)
+        .correlate(Person)
+        .scalar_subquery()
+    )
     thumbnail = (
         select(Ref.image_path)
         .where(Ref.person_id == Person.id)
         .order_by(Ref.id)
         .limit(1)
+        .correlate(Person)
         .scalar_subquery()
     )
-    stmt = (
-        select(Person, func.count(Ref.id).label("ref_count"), thumbnail.label("thumb"))
-        .outerjoin(Ref, Ref.person_id == Person.id)
-        .group_by(Person.id)
-        .order_by(Person.created_at.desc())
-    )
+    stmt = select(
+        Person, ref_count.label("ref_count"), thumbnail.label("thumb")
+    ).order_by(Person.created_at.desc())
     if person_id is not None:
         stmt = stmt.where(Person.id == person_id)
     rows = (await session.execute(stmt)).all()
