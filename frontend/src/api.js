@@ -52,6 +52,15 @@ export function enrollPerson({ name, category, notes, images }) {
 
 export const listCameras = () => req("/api/cameras");
 
+export const createCamera = ({ name, location, source_type = "upload" }) =>
+  req("/api/cameras", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, location: location || null, source_type }),
+  });
+
+export const deleteCamera = (id) => req(`/api/cameras/${id}`, { method: "DELETE" });
+
 // ------------------------------ Processing -------------------------------
 
 export function processImage(file, cameraId) {

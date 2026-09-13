@@ -56,6 +56,17 @@ class CameraOut(BaseModel):
     source_type: str
 
 
+class CameraCreate(BaseModel):
+    name: str
+    location: str | None = None
+    source_type: str = "upload"
+
+
+class CameraUpdate(BaseModel):
+    name: str | None = None
+    location: str | None = None
+
+
 class AlertOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

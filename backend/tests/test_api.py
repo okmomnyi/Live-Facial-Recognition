@@ -84,3 +84,68 @@ async def test_review_missing_alert_404(client):
         "/api/alerts/999/review", json={"action": "confirm", "reviewer": "officer"}
     )
     assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_camera_create_patch_delete(client):
+    r = await client.post(
+        "/api/cameras", json={"name": "Gate 5", "location": "West Wing"}
+    )
+    assert r.status_code == 201
+    cam = r.json()
+    assert cam["source_type"] == "upload"  # default applied
+    cid = cam["id"]
+
+    r = await client.get("/api/cameras")
+    assert any(c["id"] == cid for c in r.json())
+
+    r = await client.patch(f"/api/cameras/{cid}", json={"name": "Gate 5 (renamed)"})
+    assert r.status_code == 200
+    assert r.json()["name"] == "Gate 5 (renamed)"
+
+    r = await client.patch(f"/api/cameras/{cid}", json={})
+    assert r.status_code == 422  # nothing to update
+
+    r = await client.delete(f"/api/cameras/{cid}")
+    assert r.status_code == 204
+
+    r = await client.delete(f"/api/cameras/{cid}")
+    assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_camera_create_requires_name(client):
+    r = await client.post("/api/cameras", json={"location": "no name"})
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_camera_delete_blocked_by_alert_409(client, session):
+    # A camera referenced by an alert cannot be deleted (FK-safe -> 409).
+    from app.models import Alert, Person, Ref
+
+    person = Person(name="P", category="wanted")
+    session.add(person)
+    await session.flush()
+    ref = Ref(
+        person_id=person.id,
+        image_path="/data/references/x.png",
+        embedding=[0.0] * 512,
+        quality_score=0.9,
+    )
+    session.add(ref)
+    await session.flush()
+    session.add(
+        Alert(
+            person_id=person.id,
+            ref_id=ref.id,
+            camera_id=1,  # seeded Checkpoint A
+            confidence=0.9,
+            capture_path="/data/alerts/x.png",
+            status="pending",
+        )
+    )
+    await session.commit()
+
+    r = await client.delete("/api/cameras/1")
+    assert r.status_code == 409
