@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="LFR console">
+  <rect width="32" height="32" rx="7" fill="#1f2124"/>
+  <!-- Face bracket / checkpoint framing marks -->
+  <g fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round">
+    <path d="M8 12 V9 a1 1 0 0 1 1-1 h3"/>
+    <path d="M24 12 V9 a1 1 0 0 0-1-1 h-3"/>
+    <path d="M8 20 v3 a1 1 0 0 0 1 1 h3"/>
+    <path d="M24 20 v3 a1 1 0 0 1-1 1 h-3"/>
+  </g>
+  <!-- Scan line + face node -->
+  <circle cx="16" cy="16" r="3.4" fill="none" stroke="#f2f2f0" stroke-width="2"/>
+  <line x1="16" y1="16" x2="16" y2="16" stroke="#f2f2f0" stroke-width="0.1"/>
+</svg>

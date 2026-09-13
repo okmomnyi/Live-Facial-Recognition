@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Env
+.env
+*.local
+
+# Runtime data (images written by the pipeline are ephemeral / not committed)
+data/references/*
+data/alerts/*
+!data/references/.gitkeep
+!data/alerts/.gitkeep
+
+# InsightFace model cache (only relevant if someone maps it into the repo)
+.insightface/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Never commit real face images
+samples/*
+!samples/README.md
+!samples/.gitkeep

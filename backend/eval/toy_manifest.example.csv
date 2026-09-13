@@ -1,0 +1,7 @@
+img_a,img_b,label,skin_tone
+same/alice_1.jpg,same/alice_2.jpg,same,III
+same/bob_1.jpg,same/bob_2.jpg,same,V
+same/chidi_1.jpg,same/chidi_2.jpg,same,VI
+diff/alice_1.jpg,diff/bob_1.jpg,diff,III
+diff/bob_1.jpg,diff/chidi_1.jpg,diff,V
+diff/alice_1.jpg,diff/chidi_1.jpg,diff,VI

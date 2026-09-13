@@ -1,0 +1,27 @@
+# Render Blueprint — deploys the FastAPI backend as a free Docker web service.
+# Create it in Render via: New + -> Blueprint -> connect this repo. Render reads
+# this file. Set the DATABASE_URL secret in the dashboard when prompted (it is
+# intentionally NOT committed).
+#
+# Note: the free plan has 512 MB RAM, which is tight for InsightFace + ONNX
+# Runtime. If the service OOMs on first inference, upgrade the instance or use
+# the local + tunnel fallback documented in deploy/README.md.
+
+services:
+  - type: web
+    name: lfr-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # The Dockerfile CMD already binds ${PORT:-7860}, so Render's injected $PORT
+    # is honored without an override here.
+    healthCheckPath: /docs
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false            # set in the Render dashboard (secret, not committed)
+      - key: FRONTEND_ORIGIN
+        value: http://localhost:5173   # update to your Vercel URL later
+      - key: DATA_DIR
+        value: /data

@@ -1,0 +1,25 @@
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Config
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Database (async)
+SQLAlchemy==2.0.36
+asyncpg==0.30.0
+pgvector==0.3.6
+
+# Face pipeline
+insightface==0.7.3
+onnxruntime==1.19.2
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+
+# Tests
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+asgi-lifespan==2.1.0
