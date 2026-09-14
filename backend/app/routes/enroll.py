@@ -33,6 +33,25 @@ def _decode(data: bytes) -> np.ndarray | None:
     return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
 
+def _padded_crop(
+    img: np.ndarray, bbox: tuple[int, int, int, int], margin: float = 0.4
+) -> np.ndarray:
+    """Crop the face from the original image with margin around the bbox.
+
+    A tight crop (no margin) can't be re-detected by SCRFD, so we save a padded
+    crop as the reference image: it stays a good card thumbnail but also round-
+    trips through detection if ever reprocessed. Does not affect the stored
+    embedding, which is computed on the full image at enroll time.
+    """
+    h, w = img.shape[:2]
+    x1, y1, x2, y2 = bbox
+    mx = int((x2 - x1) * margin)
+    my = int((y2 - y1) * margin)
+    nx1, ny1 = max(0, x1 - mx), max(0, y1 - my)
+    nx2, ny2 = min(w, x2 + mx), min(h, y2 + my)
+    return img[ny1:ny2, nx1:nx2]
+
+
 @router.post("", response_model=EnrollResult)
 async def enroll(
     name: str = Form(...),
@@ -84,7 +103,9 @@ async def enroll(
 
         face = result.faces[0]
         out_name = f"{uuid.uuid4().hex}.png"
-        cv2.imwrite(str(references_dir / out_name), face.crop_bgr)
+        # Save a padded crop (re-detectable) rather than the tight quality-gate
+        # crop; the embedding is already computed on the full image.
+        cv2.imwrite(str(references_dir / out_name), _padded_crop(img, face.bbox))
         image_path = f"{settings.data_dir}/references/{out_name}"
 
         ref = Ref(

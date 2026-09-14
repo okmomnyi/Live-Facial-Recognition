@@ -23,10 +23,23 @@ CREATE TABLE IF NOT EXISTS refs (
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Cosine-distance ANN index. Embeddings are L2-normalized, so cosine
--- similarity = 1 - (a <=> b).
-CREATE INDEX IF NOT EXISTS refs_embedding_cos_idx
-  ON refs USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+-- NOTE: no ANN index on refs.embedding, on purpose.
+--
+-- An ivfflat index has a small-N recall cliff: with few rows and the default
+-- ivfflat.probes = 1, `ORDER BY embedding <=> q` probes a single list and can
+-- miss the nearest row entirely, returning NO match at any threshold. A
+-- checkpoint watchlist is small (hundreds to a few thousand refs), where an
+-- exact cosine scan is both correct and fast. Correct recall matters far more
+-- than sub-millisecond latency here, so we do a full scan.
+--
+-- Embeddings are L2-normalized, so cosine similarity = 1 - (embedding <=> q).
+--
+-- If this ever needs to scale to very large watchlists, prefer an HNSW index
+-- (no probes recall cliff):
+--   CREATE INDEX refs_embedding_hnsw_idx
+--     ON refs USING hnsw (embedding vector_cosine_ops);
+-- An ivfflat index would additionally require building it only after many rows
+-- exist AND `SET LOCAL ivfflat.probes = N` on the search query.
 
 CREATE TABLE IF NOT EXISTS cameras (
     id          SERIAL PRIMARY KEY,
