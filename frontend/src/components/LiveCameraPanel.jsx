@@ -235,7 +235,7 @@ export default function LiveCameraPanel() {
       {(running || stats.sent > 0) && (
         <div className="banner" style={{ margin: 0 }}>
           <strong>{stats.sent}</strong> frame{stats.sent === 1 ? "" : "s"} sent ·{" "}
-          <strong>{stats.faces}</strong> face{stats.faces === 1 ? "" : "s"} detected ·{" "}
+          <strong>{stats.faces}</strong> face detection{stats.faces === 1 ? "" : "s"} (total across frames) ·{" "}
           <strong>{stats.alerts}</strong> alert{stats.alerts === 1 ? "" : "s"} raised
           {lastAt ? ` · last ${lastAt.toLocaleTimeString()}` : ""}
           {running && (
