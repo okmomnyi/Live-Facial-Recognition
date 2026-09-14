@@ -10,15 +10,14 @@ import { API_BASE } from "./api.js";
 const ICE_CONFIG = {
   iceServers: [
     { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-    // TURN relay — needed when direct P2P fails (AP/client isolation, mDNS
-    // blocking, NAT hairpin, or phones on cellular). These are the public
-    // Metered "Open Relay" credentials: zero-setup, but the media is relayed
-    // through a third party. For production, self-host coturn on the VM and
-    // replace these. The :443 and :443?transport=tcp entries punch through
-    // restrictive networks that only allow HTTPS-looking traffic.
-    { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
-    { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
-    { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
+    // Self-hosted coturn on the Oracle VM (raw IP — TURN can't go through the
+    // Cloudflare tunnel). Relays media when direct P2P fails (AP/client
+    // isolation, mDNS blocking, NAT hairpin, cellular). The TCP entry helps on
+    // UDP-hostile networks. Creds are visible in the client (normal for TURN);
+    // coturn's realm + quota limit abuse, and WebRTC media stays E2E-encrypted
+    // (DTLS-SRTP) even when relayed.
+    { urls: "turn:130.61.157.40:3478", username: "lfrturn", credential: "b12dc1087ada9f9dbf82d838" },
+    { urls: "turn:130.61.157.40:3478?transport=tcp", username: "lfrturn", credential: "b12dc1087ada9f9dbf82d838" },
   ],
 };
 
