@@ -10,8 +10,15 @@ import { API_BASE } from "./api.js";
 const ICE_CONFIG = {
   iceServers: [
     { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
-    // For phones on cellular / strict NAT, add a TURN server here later:
-    // { urls: "turn:your-host:3478", username: "...", credential: "..." },
+    // TURN relay — needed when direct P2P fails (AP/client isolation, mDNS
+    // blocking, NAT hairpin, or phones on cellular). These are the public
+    // Metered "Open Relay" credentials: zero-setup, but the media is relayed
+    // through a third party. For production, self-host coturn on the VM and
+    // replace these. The :443 and :443?transport=tcp entries punch through
+    // restrictive networks that only allow HTTPS-looking traffic.
+    { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+    { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+    { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" },
   ],
 };
 
