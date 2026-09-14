@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import settings
-from .routes import alerts, cameras, enroll, persons, process, ws
+from .routes import alerts, cameras, enroll, persons, process, signal, ws
 
 logging.basicConfig(
     level=logging.INFO,
@@ -47,6 +47,7 @@ app.include_router(process.router)
 app.include_router(alerts.router)
 app.include_router(cameras.router)
 app.include_router(ws.router)
+app.include_router(signal.router)
 
 
 @app.get("/api/health", tags=["health"])

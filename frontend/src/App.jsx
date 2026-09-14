@@ -4,6 +4,8 @@ import NavBar from "./components/NavBar.jsx";
 import WatchlistPage from "./components/WatchlistPage.jsx";
 import LiveMonitorPage from "./components/LiveMonitorPage.jsx";
 import AlertsPage from "./components/AlertsPage.jsx";
+import CameraWallPage from "./components/CameraWallPage.jsx";
+import StationPage from "./components/StationPage.jsx";
 
 export default function App() {
   return (
@@ -14,6 +16,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<WatchlistPage />} />
             <Route path="/monitor" element={<LiveMonitorPage />} />
+            <Route path="/wall" element={<CameraWallPage />} />
+            <Route path="/station" element={<StationPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

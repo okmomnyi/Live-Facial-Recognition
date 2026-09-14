@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { ScanFace, Users, MonitorPlay, BellRing } from "lucide-react";
+import { ScanFace, Users, MonitorPlay, BellRing, Cctv } from "lucide-react";
 import { useAlerts } from "../alertsStore.jsx";
 
 const WS_LABEL = {
@@ -31,6 +31,10 @@ export default function NavBar() {
         <NavLink to="/monitor" className="navbar__link">
           <MonitorPlay size={18} aria-hidden="true" />
           <span className="label">Live Monitor</span>
+        </NavLink>
+        <NavLink to="/wall" className="navbar__link">
+          <Cctv size={18} aria-hidden="true" />
+          <span className="label">Camera Wall</span>
         </NavLink>
         <NavLink to="/alerts" className="navbar__link">
           <BellRing size={18} aria-hidden="true" />
