@@ -21,25 +21,44 @@ function useRoom() {
   return room;
 }
 
-function Tile({ name, stream, hot, alert, onOpenAlert }) {
+const CONNECTED = new Set(["connected", "completed"]);
+
+function Tile({ name, stream, state, hot, alert, onOpenAlert }) {
   const ref = useRef(null);
+  const [playing, setPlaying] = useState(false);
   useEffect(() => {
-    if (ref.current && stream) ref.current.srcObject = stream;
+    const v = ref.current;
+    if (!v || !stream) return;
+    v.srcObject = stream;
+    const tryPlay = () => v.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    tryPlay();
+    v.onloadedmetadata = tryPlay;
   }, [stream]);
+
+  const connecting = !CONNECTED.has(state) && state !== undefined;
+  const failed = state === "failed" || state === "disconnected";
+
   return (
     <div className={`wall-tile ${hot ? "wall-tile--hot" : ""}`}>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video ref={ref} autoPlay playsInline muted />
+      {(!playing || connecting) && (
+        <div className="wall-tile__overlay">
+          {failed
+            ? "No P2P route — needs TURN (different network?)"
+            : connecting
+              ? "Connecting…"
+              : "Waiting for video…"}
+        </div>
+      )}
       <div className="wall-tile__bar">
         <span className="wall-tile__name">{name}</span>
-        {hot && alert && (
-          <button
-            className="wall-tile__alert"
-            onClick={() => onOpenAlert(alert)}
-            title="Review match"
-          >
+        {hot && alert ? (
+          <button className="wall-tile__alert" onClick={() => onOpenAlert(alert)} title="Review match">
             {alert.person_name} · {Math.round((alert.confidence || 0) * 100)}%
           </button>
+        ) : (
+          <span className="wall-tile__state">{state || "…"}</span>
         )}
       </div>
     </div>
@@ -53,6 +72,7 @@ export default function CameraWallPage() {
   const [qr, setQr] = useState(null);
   const [status, setStatus] = useState("connecting");
   const [active, setActive] = useState(null);
+  const [states, setStates] = useState({}); // peerId -> connection state
   const streams = useRef(new Map());
   const meshRef = useRef(null);
 
@@ -75,6 +95,15 @@ export default function CameraWallPage() {
   const onPeerLeft = useCallback((peerId) => {
     streams.current.delete(peerId);
     setTiles((prev) => prev.filter((t) => t.peerId !== peerId));
+    setStates((prev) => {
+      const next = { ...prev };
+      delete next[peerId];
+      return next;
+    });
+  }, []);
+
+  const onPeerState = useCallback((peerId, state) => {
+    setStates((prev) => ({ ...prev, [peerId]: state }));
   }, []);
 
   useEffect(() => {
@@ -84,11 +113,12 @@ export default function CameraWallPage() {
       name: "operator",
       onRemoteStream,
       onPeerLeft,
+      onPeerState,
       onStatus: setStatus,
     });
     meshRef.current = mesh;
     return () => mesh.close();
-  }, [room, onRemoteStream, onPeerLeft]);
+  }, [room, onRemoteStream, onPeerLeft, onPeerState]);
 
   // Most-recent alert per camera name, for tile highlighting ("trail" the target).
   const now = Date.now();
@@ -161,6 +191,7 @@ export default function CameraWallPage() {
                     key={t.peerId}
                     name={t.name}
                     stream={streams.current.get(t.peerId)}
+                    state={states[t.peerId]}
                     hot={hot}
                     alert={alert}
                     onOpenAlert={setActive}

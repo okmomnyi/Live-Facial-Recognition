@@ -36,7 +36,7 @@ export function randomId(prefix = "p") {
  * Returns { close() }.
  */
 export function createMesh(opts) {
-  const { room, role, name, localStream, onRemoteStream, onPeerLeft, onStatus } = opts;
+  const { room, role, name, localStream, onRemoteStream, onPeerLeft, onStatus, onPeerState } = opts;
   const peerId = randomId(role === "publisher" ? "pub" : "view");
   const pcs = new Map(); // otherPeerId -> RTCPeerConnection
   const names = new Map(); // otherPeerId -> label
@@ -62,9 +62,11 @@ export function createMesh(opts) {
       if (e.candidate) signalTo(otherId, { kind: "ice", candidate: e.candidate });
     };
     pc.onconnectionstatechange = () => {
-      if (["failed", "closed", "disconnected"].includes(pc.connectionState)) {
-        // Leave cleanup to peer-left / explicit close; failed can recover.
-      }
+      onPeerState && onPeerState(otherId, pc.connectionState);
+    };
+    pc.oniceconnectionstatechange = () => {
+      // "failed" here almost always means no reachable P2P path -> needs TURN.
+      onPeerState && onPeerState(otherId, pc.connectionState || pc.iceConnectionState);
     };
     if (role === "publisher" && localStream) {
       localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
